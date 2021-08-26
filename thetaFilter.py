@@ -1,4 +1,4 @@
-# tethaFilter
+# tethaFilter respecto a la vertical
 # Juan Pablo Zuluaga C 2021 PUJ Procesamiento de imagenes y video
 import cv2
 import numpy as np
@@ -29,7 +29,7 @@ class tethaFilter:
         enum_rows = np.linspace(0, num_rows - 1, num_rows)
         enum_cols = np.linspace(0, num_cols - 1, num_cols)
         col_iter, row_iter = np.meshgrid(enum_cols, enum_rows)
-        half_size = num_rows / 2 - 1  # Se asume numero de columnas = numero de filas
+        half_size = num_rows / 2   # Se asume numero de columnas = numero de filas
 
         # +deltaTetha -deltaTetha
         deltaTethaUp = self.tetha + self.deltaTetha
@@ -42,9 +42,10 @@ class tethaFilter:
         tetha_mask4 = np.zeros_like(self.image)
 
         # Se halla el angulo en grados respecto a la vertical
-        a = row_iter - half_size
-        b = col_iter - half_size
-        condicion = 180 / np.pi * np.arctan(np.divide(b, a, out=np.zeros_like(a), where=a != 0))
+        a = half_size - row_iter
+        b = half_size - col_iter
+        condicion = 180 / np.pi * np.arctan2(b, a)
+        #condicion = 180 / np.pi * np.arctan(np.divide(b, a, out=np.zeros_like(a), where=a != 0))
 
         # Se pregunta por la primera condicion
         idx1 = condicion > deltaTethaDown
@@ -56,25 +57,47 @@ class tethaFilter:
 
         # Se declaran estos valores ya que la funcion arctan devuelve valores negativos, es para comparar en este
         # cuadrante
-        deltaTethaUpNeg = deltaTethaUp - 180
-        deltaTethaDownNeg = deltaTethaDown - 180
+        deltaTethaUpNeg = (self.tetha - 180 + self.deltaTetha)
+        deltaTethaDownNeg = (self.tetha - 180 - self.deltaTetha)
 
-        # Se evalua esta condicion en el cuadrante inferior
-        idx3 = condicion < deltaTethaUpNeg
-        tetha_mask3[idx3] = 1
+        # Se pone una condicion para cuando el rango esta por fuera de -180
+        if deltaTethaDownNeg < -180 :
+            deltaTethaDownNeg = self.tetha + 180 - self.deltaTetha
 
-        # Se evalua la condicion en el cuadrante inferior
-        idx4 = condicion > deltaTethaDownNeg
-        tetha_mask4[idx4] = 1
+            # Se evalua esta condicion en el cuadrante inferior
+            idx3 = condicion < deltaTethaUpNeg
+            tetha_mask3[idx3] = 1
+
+            # Se evalua la condicion en el cuadrante inferior
+            idx4 = condicion > deltaTethaDownNeg
+            tetha_mask4[idx4] = 1
+
+
+            # Se hace el xor entre la mascara 3 y 4 para obtener la del segundo cuadrante
+            mask2 = cv2.bitwise_xor(tetha_mask3, tetha_mask4)
+
+        else:
+            # Se evalua esta condicion en el cuadrante inferior
+            idx3 = condicion < deltaTethaUpNeg
+            tetha_mask3[idx3] = 1
+
+            # Se evalua la condicion en el cuadrante inferior
+            idx4 = condicion > deltaTethaDownNeg
+            tetha_mask4[idx4] = 1
+
+            # Se hace el and entre la mascara 3 y 4 para obtener la del segundo cuadrante
+            mask2 = cv2.bitwise_and(tetha_mask3, tetha_mask4)
+
+
+
+
 
         # Se hace el and entre la mascara 1 y 2 para obtener la del primer cuadrante
         mask = cv2.bitwise_and(tetha_mask1, tetha_mask2)
 
-        # Se hace el and entre la mascara 3 y 4 para obtener la del segundo cuadrante
-        mask2 = cv2.bitwise_and(tetha_mask3, tetha_mask4)
-
         # Se aplica un OR entre estas dos mascaras para obtener la final
         maskdefinitiva = cv2.bitwise_or(mask2, mask)
+        maskdefinitiva[int(half_size), int(half_size)] = 1;
 
         # Se muestra la respuesta en frecuencia
         cv2.imshow("freq tetha {} y delta {}".format(self.tetha, self.deltaTetha), maskdefinitiva * 255)

@@ -3,7 +3,7 @@ import numpy as np
 import os
 import sys
 from matplotlib import pyplot as plt
-from thetaFilter import tethaFilter
+from thetaFilter import tethaFilter #TethaFilter Respecto a la vertical
 
 if __name__ == '__main__':
     # Se lee la imagen y se pasa a grises
@@ -21,10 +21,11 @@ if __name__ == '__main__':
     tethaFilter4 = tethaFilter(image_gray)
 
     # Se asignan los tetha y los delta tetha
-    tethaFilter1.set_theta(0, 5)
-    tethaFilter2.set_theta(45, 5)
-    tethaFilter3.set_theta(90, 5)
-    tethaFilter4.set_theta(135, 5)
+    delta = 5
+    tethaFilter1.set_theta(0, delta)
+    tethaFilter2.set_theta(45, delta)
+    tethaFilter3.set_theta(90, delta)
+    tethaFilter4.set_theta(135, delta)
 
     #Se llaman las imagenes
     img1 = tethaFilter1.filtering()
@@ -34,6 +35,7 @@ if __name__ == '__main__':
 
 
     # Se muestran las imagenes
+    cv2.imshow("Imagen original",image)
     cv2.imshow("tetha {} y delta {}".format(tethaFilter1.tetha, tethaFilter1.deltaTetha), img1)
     cv2.imshow("tetha {} y delta {}".format(tethaFilter2.tetha, tethaFilter2.deltaTetha), img2)
     cv2.imshow("tetha {} y delta {}".format(tethaFilter3.tetha, tethaFilter3.deltaTetha), img3)
